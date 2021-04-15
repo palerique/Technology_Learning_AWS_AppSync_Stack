@@ -72,7 +72,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             authenticationType: 'API_KEY',
             logConfig: {
                 cloudWatchLogsRoleArn: guestbookRole.roleArn,
-                fieldLogLevel: 'All'
+                fieldLogLevel: 'ALL'
             },
             xrayEnabled: true
         });

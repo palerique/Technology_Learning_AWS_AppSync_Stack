@@ -6,9 +6,9 @@
   },
   "attributeValues": {
     "createdDate": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601()),
-    "guestbookId": $util.dynamodb.toDynamoDBJson($ctx.input.guestbookId),
-    "message": $util.dynamodb.toDynamoDBJson($ctx.input.message),
-    "author": $util.dynamodb.toDynamoDBJson($ctx.input.author)
+    "guestbookId": $util.dynamodb.toDynamoDBJson($ctx.args.input.guestbookId),
+    "message": $util.dynamodb.toDynamoDBJson($ctx.args.input.message),
+    "author": $util.dynamodb.toDynamoDBJson($ctx.args.input.author)
   },
   "condition": {
     "expression": "attribute_not_exists(#id)",
