@@ -1,0 +1,94 @@
+﻿schema {
+    query: Query
+    mutation: Mutation
+}
+
+type GuestbookComment {
+    id: ID!
+    guestboookId: String!
+    createdDate: String!
+    author: String!
+    message: String!
+}
+
+type GuestbookComments {
+    items: [GuestbookComment]
+    nextToken: String
+}
+
+type Mutation {
+    createGuestbookComment(input: CreateGuestbookCommentInput!): GuestbookComment
+    deleteGuestbookComment(input: DeleteGuestbookCommentInput!): GuestbookComment
+    updateGuestbookComment(input: UpdateGuestbookCommentInput!): GuestbookComment
+}
+
+type Query {
+    getGuestbookComment(id: ID!): GuestbookComment
+    listGuestbookComments(filter: TableGuestbookCommentFilterInput, limit: Int, nextToken: String): GuestbookComments
+}
+
+input CreateGuestbookCommentInput {
+    guestboookId: String!
+    author: String!
+    message: String!
+}
+
+input DeleteGuestbookCommentInput {
+    id: ID!
+}
+
+input TableBooleanFilterInput {
+    eq: Boolean
+    ne: Boolean
+}
+
+input TableGuestbookCommentFilterInput {
+    guestboookId: TableStringFilterInput
+    id: TableIDFilterInput
+    createdDate: TableStringFilterInput
+    author: TableStringFilterInput
+    message: TableStringFilterInput
+}
+
+input UpdateGuestbookCommentInput {
+    id: ID!
+    message: String
+}
+
+input TableIDFilterInput {
+    beginsWith: ID
+    between: [ID]
+    contains: ID
+    eq: ID
+    ge: ID
+    gt: ID
+    le: ID
+    lt: ID
+    ne: ID
+    notContains: ID
+}
+
+input TableIntFilterInput {
+    between: [Int]
+    contains: Int
+    eq: Int
+    ge: Int
+    gt: Int
+    le: Int
+    lt: Int
+    ne: Int
+    notContains: Int
+}
+
+input TableStringFilterInput {
+    beginsWith: String
+    between: [String]
+    contains: String
+    eq: String
+    ge: String
+    gt: String
+    le: String
+    lt: String
+    ne: String
+    notContains: String
+}

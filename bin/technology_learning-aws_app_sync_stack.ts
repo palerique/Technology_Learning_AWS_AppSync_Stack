@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { TechnologyLearningAwsAppSyncStackStack } from '../lib/technology_learning-aws_app_sync_stack-stack';
+import { TechnologyLearningAwsAppSyncStack } from '../lib/technology_learning-aws_app_sync_stack-stack';
 
 const app = new cdk.App();
-new TechnologyLearningAwsAppSyncStackStack(app, 'TechnologyLearningAwsAppSyncStackStack', {
+new TechnologyLearningAwsAppSyncStack(app, 'TechnologyLearningAwsAppSyncStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */

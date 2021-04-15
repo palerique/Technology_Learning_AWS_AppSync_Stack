@@ -5,7 +5,7 @@ import * as TechnologyLearningAwsAppSyncStack from '../lib/technology_learning-a
 test('Empty Stack', () => {
     const app = new cdk.App();
     // WHEN
-    const stack = new TechnologyLearningAwsAppSyncStack.TechnologyLearningAwsAppSyncStackStack(app, 'MyTestStack');
+    const stack = new TechnologyLearningAwsAppSyncStack.TechnologyLearningAwsAppSyncStack(app, 'MyTestStack');
     // THEN
     expectCDK(stack).to(matchTemplate({
       "Resources": {}
