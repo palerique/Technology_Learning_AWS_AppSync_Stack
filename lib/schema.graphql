@@ -5,7 +5,7 @@
 
 type GuestbookComment {
     id: ID!
-    guestboookId: String!
+    guestbookId: String!
     createdDate: String!
     author: String!
     message: String!
@@ -28,7 +28,7 @@ type Query {
 }
 
 input CreateGuestbookCommentInput {
-    guestboookId: String!
+    guestbookId: String!
     author: String!
     message: String!
 }
@@ -43,7 +43,7 @@ input TableBooleanFilterInput {
 }
 
 input TableGuestbookCommentFilterInput {
-    guestboookId: TableStringFilterInput
+    guestbookId: TableStringFilterInput
     id: TableIDFilterInput
     createdDate: TableStringFilterInput
     author: TableStringFilterInput

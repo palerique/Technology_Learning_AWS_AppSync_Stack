@@ -13,13 +13,6 @@ function getTextFromFile(path: string) {
     return fs.readFileSync(Path.join(__dirname, path), 'utf-8').toString();
 }
 
-const graphQlSchema: string = getTextFromFile('schema.graphql');
-const updateGuestbookCommentVm: string = getTextFromFile('resolvers/updateGuestbookComment.vm');
-const createGuestbookCommentVm: string = getTextFromFile('resolvers/createGuestbookComment.vm');
-const deleteGuestbookCommentVm: string = getTextFromFile('resolvers/deleteGuestbookComment.vm');
-const getGuestbookCommentVm: string = getTextFromFile('resolvers/getGuestbookComment.vm');
-const listGuestbookCommentsVm: string = getTextFromFile('resolvers/listGuestbookComments.vm');
-
 const guestbookEvents = [
     'marriage',
     'website-visit',
@@ -36,7 +29,7 @@ function getRandomGuestbookEvent(): string {
 interface Comment {
     id: { S: string };
     guestbookId: { S: string };
-    createdDate: { S: string }
+    createdDate: { S: string };
     author: { S: string };
     message: { S: string };
 }
@@ -64,9 +57,24 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
+        //IAM:
+        const guestbookRole = new Role(this, 'GuestbookCommentRole', {
+            assumedBy: new ServicePrincipal('appsync.amazonaws.com')
+        });
+
+        guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'));
+        guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AWSXrayFullAccess'));
+        guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('CloudWatchFullAccess'));
+
+        //AppSync API
         const commentsGraphQLApi = new CfnGraphQLApi(this, 'GuestbookCommentApi', {
             name: 'guestbook-comment-api',
-            authenticationType: 'API_KEY'
+            authenticationType: 'API_KEY',
+            logConfig: {
+                cloudWatchLogsRoleArn: guestbookRole.roleArn,
+                fieldLogLevel: 'All'
+            },
+            xrayEnabled: true
         });
 
         new CfnApiKey(this, 'GuestbookCommentApiKey', {
@@ -75,22 +83,23 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 
         const cfnGraphQLSchema = new CfnGraphQLSchema(this, 'GuestbookCommentSchema', {
             apiId: commentsGraphQLApi.attrApiId,
-            definition: graphQlSchema
+            definition: getTextFromFile('schema.graphql')
         });
 
-        const idAttribute: Attribute = {
-            name: 'id',
+        //DynamoDB Table
+        const guestbookIdAttribute: Attribute = {
+            name: 'guestbookId',
             type: AttributeType.STRING
         };
 
         const createdDateAttribute: Attribute = {
             name: 'createdDate',
-            type: AttributeType.NUMBER
+            type: AttributeType.STRING
         };
 
         let tableProps: TableProps = {
             tableName: 'GuestbookCommentTable',
-            partitionKey: idAttribute,
+            partitionKey: guestbookIdAttribute,
             sortKey: createdDateAttribute,
             billingMode: BillingMode.PAY_PER_REQUEST,
             stream: StreamViewType.NEW_IMAGE,
@@ -99,12 +108,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 
         const commentsTable = new Table(this, `${tableProps.tableName}`, tableProps);
 
-        const commentsTableRole = new Role(this, 'GuestbookCommentDynamoDBRole', {
-            assumedBy: new ServicePrincipal('appsync.amazonaws.com')
-        });
-
-        commentsTableRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'));
-
+        //Datasource resolvers:
         const dataSource = new CfnDataSource(this, 'GuestbookCommentDataSource', {
             apiId: commentsGraphQLApi.attrApiId,
             name: 'GuestbookCommentDynamoDataSource',
@@ -113,7 +117,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
                 tableName: commentsTable.tableName,
                 awsRegion: this.region,
             },
-            serviceRoleArn: commentsTableRole.roleArn
+            serviceRoleArn: guestbookRole.roleArn
         });
 
         const getOneResolver = new CfnResolver(this, 'GetOneQueryResolver', {
@@ -121,7 +125,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             typeName: 'Query',
             fieldName: 'getGuestbookComment',
             dataSourceName: dataSource.name,
-            requestMappingTemplate: getGuestbookCommentVm,
+            requestMappingTemplate: getTextFromFile('resolvers/getGuestbookComment.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
         getOneResolver.addDependsOn(cfnGraphQLSchema);
@@ -132,7 +136,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             typeName: 'Query',
             fieldName: 'listGuestbookComments',
             dataSourceName: dataSource.name,
-            requestMappingTemplate: listGuestbookCommentsVm,
+            requestMappingTemplate: getTextFromFile('resolvers/listGuestbookComments.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
         getAllResolver.addDependsOn(cfnGraphQLSchema);
@@ -143,7 +147,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             typeName: 'Mutation',
             fieldName: 'createGuestbookComment',
             dataSourceName: dataSource.name,
-            requestMappingTemplate: createGuestbookCommentVm,
+            requestMappingTemplate: getTextFromFile('resolvers/createGuestbookComment.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
         saveResolver.addDependsOn(cfnGraphQLSchema);
@@ -154,7 +158,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             typeName: 'Mutation',
             fieldName: 'updateGuestbookComment',
             dataSourceName: dataSource.name,
-            requestMappingTemplate: updateGuestbookCommentVm,
+            requestMappingTemplate: getTextFromFile('resolvers/updateGuestbookComment.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
         updateResolver.addDependsOn(cfnGraphQLSchema);
@@ -165,12 +169,13 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             typeName: 'Mutation',
             fieldName: 'deleteGuestbookComment',
             dataSourceName: dataSource.name,
-            requestMappingTemplate: deleteGuestbookCommentVm,
+            requestMappingTemplate: getTextFromFile('resolvers/deleteGuestbookComment.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
         deleteResolver.addDependsOn(cfnGraphQLSchema);
         deleteResolver.addDependsOn(dataSource);
 
+        //Add some data:
         this.generateInitialData(commentsTable);
     }
 
@@ -182,7 +187,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
                     action: 'batchWriteItem',
                     parameters: {
                         RequestItems: {
-                            ['GuestbookComment']: generateBatch(),
+                            [commentsTable.tableName]: generateBatch(),
                         },
                     },
                     physicalResourceId: PhysicalResourceId.of(`initDBDataBatch${i}`),
