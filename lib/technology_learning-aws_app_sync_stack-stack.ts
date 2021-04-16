@@ -186,8 +186,8 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             typeName: 'Query',
             fieldName: 'listGuestbookComments',
             dataSourceName: dataSource.name,
-            requestMappingTemplate: getTextFromFile('resolvers/listGuestbookComments.vm'),
-            responseMappingTemplate: responseMappingTemplate
+            requestMappingTemplate: MappingTemplate.fromFile('lib/resolvers/listGuestbookComments.vm').renderTemplate(),
+            responseMappingTemplate: '$util.toJson($ctx.result)'
         });
         getAllResolver.addDependsOn(dataSource);
 
