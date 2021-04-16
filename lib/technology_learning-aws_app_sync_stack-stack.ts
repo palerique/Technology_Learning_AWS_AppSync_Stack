@@ -1,9 +1,26 @@
 import cdk = require('@aws-cdk/core');
-import {CfnApiKey, CfnDataSource, CfnGraphQLApi, CfnGraphQLSchema, CfnResolver} from '@aws-cdk/aws-appsync';
-import {Attribute, AttributeType, BillingMode, StreamViewType, Table, TableProps} from '@aws-cdk/aws-dynamodb';
+import {
+    AuthorizationType,
+    CfnApiKey,
+    CfnDataSource,
+    CfnResolver,
+    FieldLogLevel,
+    GraphqlApi,
+    Schema
+} from '@aws-cdk/aws-appsync';
+import {
+    Attribute,
+    AttributeType,
+    BillingMode,
+    ProjectionType,
+    StreamViewType,
+    Table,
+    TableProps
+} from '@aws-cdk/aws-dynamodb';
 import {ManagedPolicy, Role, ServicePrincipal} from '@aws-cdk/aws-iam';
-import {datatype, date, helpers} from 'faker';
+import * as lambda from "@aws-cdk/aws-lambda";
 import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId} from '@aws-cdk/custom-resources';
+import {datatype, date, helpers} from 'faker';
 import * as fs from 'fs';
 import * as Path from "path";
 
@@ -52,6 +69,23 @@ function generateBatch(batchSize = 25): { PutRequest: { Item: Comment } }[] {
 
 const responseMappingTemplate = '$util.toJson($ctx.result)';
 
+function outputUsefulInfo(param: any, api: GraphqlApi) {
+    // Prints out the AppSync GraphQL endpoint to the terminal
+    new cdk.CfnOutput(param, "GraphQLAPIURL", {
+        value: api.graphqlUrl
+    });
+
+    // Prints out the AppSync GraphQL API key to the terminal
+    new cdk.CfnOutput(param, "GraphQLAPIKey", {
+        value: api.apiKey || ''
+    });
+
+    // Prints out the stack region to the terminal
+    new cdk.CfnOutput(param, "Stack Region", {
+        value: param.region
+    });
+}
+
 export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 
     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -67,23 +101,27 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
         guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('CloudWatchFullAccess'));
 
         //AppSync API
-        const commentsGraphQLApi = new CfnGraphQLApi(this, 'GuestbookCommentApi', {
+        const commentsGraphQLApi = new GraphqlApi(this, 'GuestbookCommentApi', {
             name: 'guestbook-comment-api',
-            authenticationType: 'API_KEY',
+            schema: Schema.fromAsset('graphql/schema.graphql'),
+            authorizationConfig: {
+                defaultAuthorization: {
+                    authorizationType: AuthorizationType.API_KEY,
+                    apiKeyConfig: {
+                        expires: cdk.Expiration.after(cdk.Duration.days(365))
+                    }
+                },
+            },
             logConfig: {
-                cloudWatchLogsRoleArn: guestbookRole.roleArn,
-                fieldLogLevel: 'ALL'
+                fieldLogLevel: FieldLogLevel.ALL,
+                excludeVerboseContent: false,
+                role: guestbookRole
             },
             xrayEnabled: true
         });
 
         new CfnApiKey(this, 'GuestbookCommentApiKey', {
-            apiId: commentsGraphQLApi.attrApiId
-        });
-
-        const cfnGraphQLSchema = new CfnGraphQLSchema(this, 'GuestbookCommentSchema', {
-            apiId: commentsGraphQLApi.attrApiId,
-            definition: getTextFromFile('schema.graphql')
+            apiId: commentsGraphQLApi.apiId
         });
 
         //DynamoDB Table
@@ -108,9 +146,21 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 
         const commentsTable = new Table(this, `${tableProps.tableName}`, tableProps);
 
+        const idAttribute: Attribute = {
+            name: 'id',
+            type: AttributeType.STRING
+        };
+
+        let gsiProps = {
+            indexName: "get-and-delete-by-id-gsi",
+            partitionKey: idAttribute,
+            projectionType: ProjectionType.ALL
+        };
+        commentsTable.addGlobalSecondaryIndex(gsiProps)
+
         //Datasource resolvers:
         const dataSource = new CfnDataSource(this, 'GuestbookCommentDataSource', {
-            apiId: commentsGraphQLApi.attrApiId,
+            apiId: commentsGraphQLApi.apiId,
             name: 'GuestbookCommentDynamoDataSource',
             type: 'AMAZON_DYNAMODB',
             dynamoDbConfig: {
@@ -121,62 +171,66 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
         });
 
         const getOneResolver = new CfnResolver(this, 'GetOneQueryResolver', {
-            apiId: commentsGraphQLApi.attrApiId,
+            apiId: commentsGraphQLApi.apiId,
             typeName: 'Query',
             fieldName: 'getGuestbookComment',
             dataSourceName: dataSource.name,
             requestMappingTemplate: getTextFromFile('resolvers/getGuestbookComment.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
-        getOneResolver.addDependsOn(cfnGraphQLSchema);
         getOneResolver.addDependsOn(dataSource);
 
         const getAllResolver = new CfnResolver(this, 'GetAllQueryResolver', {
-            apiId: commentsGraphQLApi.attrApiId,
+            apiId: commentsGraphQLApi.apiId,
             typeName: 'Query',
             fieldName: 'listGuestbookComments',
             dataSourceName: dataSource.name,
             requestMappingTemplate: getTextFromFile('resolvers/listGuestbookComments.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
-        getAllResolver.addDependsOn(cfnGraphQLSchema);
         getAllResolver.addDependsOn(dataSource);
 
         const saveResolver = new CfnResolver(this, 'SaveMutationResolver', {
-            apiId: commentsGraphQLApi.attrApiId,
+            apiId: commentsGraphQLApi.apiId,
             typeName: 'Mutation',
             fieldName: 'createGuestbookComment',
             dataSourceName: dataSource.name,
             requestMappingTemplate: getTextFromFile('resolvers/createGuestbookComment.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
-        saveResolver.addDependsOn(cfnGraphQLSchema);
         saveResolver.addDependsOn(dataSource);
 
         const updateResolver = new CfnResolver(this, 'UpdateMutationResolver', {
-            apiId: commentsGraphQLApi.attrApiId,
+            apiId: commentsGraphQLApi.apiId,
             typeName: 'Mutation',
             fieldName: 'updateGuestbookComment',
             dataSourceName: dataSource.name,
             requestMappingTemplate: getTextFromFile('resolvers/updateGuestbookComment.vm'),
             responseMappingTemplate: responseMappingTemplate
         });
-        updateResolver.addDependsOn(cfnGraphQLSchema);
         updateResolver.addDependsOn(dataSource);
 
-        const deleteResolver = new CfnResolver(this, 'DeleteMutationResolver', {
-            apiId: commentsGraphQLApi.attrApiId,
-            typeName: 'Mutation',
-            fieldName: 'deleteGuestbookComment',
-            dataSourceName: dataSource.name,
-            requestMappingTemplate: getTextFromFile('resolvers/deleteGuestbookComment.vm'),
-            responseMappingTemplate: responseMappingTemplate
+        const deleteHandlerLambda = new lambda.Function(this, "DeleteHandler", {
+            runtime: lambda.Runtime.NODEJS_14_X,
+            code: lambda.Code.fromAsset("lambdas"),
+            handler: "delete.main",
+            environment: {
+                TABLE_NAME: commentsTable.tableName,
+                GSI_NAME: gsiProps.indexName
+            },
         });
-        deleteResolver.addDependsOn(cfnGraphQLSchema);
-        deleteResolver.addDependsOn(dataSource);
+        commentsTable.grantFullAccess(deleteHandlerLambda);
+
+        let deleteLambdaDataSource = commentsGraphQLApi.addLambdaDataSource('deleteHandlerLambdaDatasource', deleteHandlerLambda);
+        deleteLambdaDataSource.createResolver({
+            typeName: 'Mutation',
+            fieldName: 'deleteGuestbookComment'
+        });
 
         //Add some data:
         this.generateInitialData(commentsTable);
+
+        outputUsefulInfo(this, commentsGraphQLApi)
     }
 
     private generateInitialData(commentsTable: Table) {
