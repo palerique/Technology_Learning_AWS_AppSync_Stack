@@ -1,43 +1,36 @@
 const AWS = require('aws-sdk');
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-exports.main = async function (event, context) {
+exports.main = async function (event, context, callback) {
     try {
-        let params = {
+        const data = await dynamoDB.query({
             TableName: process.env.TABLE_NAME,
             IndexName: process.env.GSI_NAME,
             KeyConditionExpression: "id = :id",
             ExpressionAttributeValues: {
                 ":id": event.arguments.input.id
             },
-        };
-        const data = await dynamoDB.query(params).promise();
-        let body = {
-            Item: data
-        };
-        let stringify = JSON.stringify(body);
-        console.log(stringify);
-
-        const {createdDate, guestbookId} = data.Items[0];
+        }).promise();
+        console.log(JSON.stringify(data));
+        const [toBeDeleted] = data.Items;
         let deleteParams = {
             TableName: process.env.TABLE_NAME,
             Key: {
-                guestbookId,
-                createdDate,
+                guestbookId: toBeDeleted.guestbookId,
+                createdDate: toBeDeleted.createdDate,
             }
         };
 
-        const result = await dynamoDB.delete(deleteParams).promise()
+        await dynamoDB.delete(deleteParams).promise();
+        console.log(deleteParams);
+        console.log(toBeDeleted);
+        let result = {data: {deleteGuestbookComment: toBeDeleted}};
         console.log(result);
-
-        return data.Items[0];
+        console.log(context);
+        callback(null, toBeDeleted)
     } catch (error) {
         const body = error.stack || JSON.stringify(error, null, 2);
         console.error('ERROR!!!', body)
-        return {
-            statusCode: 400,
-            headers: {},
-            body: JSON.stringify(body)
-        }
+        callback('ERROR!!!', body);
     }
 }

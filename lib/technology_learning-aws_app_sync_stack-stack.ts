@@ -6,6 +6,7 @@ import {
     CfnResolver,
     FieldLogLevel,
     GraphqlApi,
+    MappingTemplate,
     Schema
 } from '@aws-cdk/aws-appsync';
 import {
@@ -224,7 +225,8 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
         let deleteLambdaDataSource = commentsGraphQLApi.addLambdaDataSource('deleteHandlerLambdaDatasource', deleteHandlerLambda);
         deleteLambdaDataSource.createResolver({
             typeName: 'Mutation',
-            fieldName: 'deleteGuestbookComment'
+            fieldName: 'deleteGuestbookComment',
+            responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
         });
 
         //Add some data:
