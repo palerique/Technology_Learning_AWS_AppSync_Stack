@@ -1,0 +1,159 @@
+{
+	"info": {
+		"_postman_id": "a25b9dba-f36c-41f8-a32c-d359599ad78d",
+		"name": "Guestbook",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "guestbook list all",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "content-type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query MyQuery {\n  listGuestbookComments {\n    items {\n      author\n      createdDate\n      guestbookId\n      id\n      message\n    }\n    nextToken\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "https://umwng5ogsrefdou5bbev6sudx4.appsync-api.us-east-1.amazonaws.com/graphql",
+					"protocol": "https",
+					"host": [
+						"umwng5ogsrefdou5bbev6sudx4",
+						"appsync-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "guestbook list - filter author",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "authority",
+						"value": "ujxu7o2hxvfrvgfricrp6hetiq.appsync-api.us-east-1.amazonaws.com",
+						"disabled": true
+					},
+					{
+						"key": "x-api-key",
+						"value": "da2-u3e54e7rbbechkqanih3f236v4"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "accept",
+						"value": "*/*"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query MyQuery {\n  listGuestbookComments(filter: {author: {contains: \"Rodrigues\"}}) {\n    items {\n      author\n      createdDate\n      guestbookId\n      id\n      message\n    }\n    nextToken\n  }\n}\n",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "https://umwng5ogsrefdou5bbev6sudx4.appsync-api.us-east-1.amazonaws.com/graphql",
+					"protocol": "https",
+					"host": [
+						"umwng5ogsrefdou5bbev6sudx4",
+						"appsync-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create a new comment",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "content-type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation MyMutation {\n  createGuestbookComment(input: {author: \"Paulo Rodrigues\", guestbookId: \"formatura\", message: \"Ao infinito e alem\"}) {\n    author\n    createdDate\n    guestbookId\n    id\n    message\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "https://umwng5ogsrefdou5bbev6sudx4.appsync-api.us-east-1.amazonaws.com/graphql",
+					"protocol": "https",
+					"host": [
+						"umwng5ogsrefdou5bbev6sudx4",
+						"appsync-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "da2-u3e54e7rbbechkqanih3f236v4",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "x-api-key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
