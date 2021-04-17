@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "lib": [
+      "ES6"
+    ],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "target": "ES6",
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./lambda/getCommnent/tsconfig.build.json"
+    },
+    {
+      "path": "./lambda/deleteCommnent/tsconfig.build.json"
+    },
+    {
+      "path": "./lambda/listCommnents/tsconfig.build.json"
+    }
+  ]
+}
