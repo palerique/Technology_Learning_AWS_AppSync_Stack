@@ -27,3 +27,6 @@ layer/**/src/**/*.d.ts
 .cdk.staging
 cdk.out
 /.idea/
+/bin/technology_learning-aws_app_sync_stack.js
+/test/technology_learning-aws_app_sync_stack.test.js
+/lib/technology_learning-aws_app_sync_stack-stack.js
