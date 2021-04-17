@@ -1,0 +1,76 @@
+{
+  "ModelName": "Guestbook",
+  "ModelMetadata": {
+    "Author": "Paulo Rodrigues",
+    "DateCreated": "Apr 13, 2021, 12:28 PM",
+    "DateLastModified": "Apr 16, 2021, 10:27 PM",
+    "Description": "Technology Learning Aws AppSync Stack",
+    "AWSService": "Amazon DynamoDB",
+    "Version": "2.0"
+  },
+  "DataModel": [
+    {
+      "TableName": "GuestbookCommentTable",
+      "KeyAttributes": {
+        "PartitionKey": {
+          "AttributeName": "guestbookId",
+          "AttributeType": "S"
+        },
+        "SortKey": {
+          "AttributeName": "creationDate",
+          "AttributeType": "S"
+        }
+      },
+      "NonKeyAttributes": [
+        {
+          "AttributeName": "id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "author",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "message",
+          "AttributeType": "S"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "get-and-delete-by-id-gsi",
+          "KeyAttributes": {
+            "PartitionKey": {
+              "AttributeName": "id",
+              "AttributeType": "S"
+            }
+          },
+          "Projection": {
+            "ProjectionType": "ALL"
+          }
+        }
+      ],
+      "TableData": [
+        {
+          "guestbookId": {
+            "S": "graduation"
+          },
+          "creationDate": {
+            "S": "2021-04-17T01:26:42.236Z"
+          },
+          "id": {
+            "S": "9e22f707-b696-47f1-94e8-c80dbefc52ee"
+          },
+          "author": {
+            "S": "Paulo Rodrigues"
+          },
+          "message": {
+            "S": "With great power comes great responsibility"
+          }
+        }
+      ],
+      "DataAccess": {
+        "MySql": {}
+      }
+    }
+  ]
+}

@@ -8,21 +8,11 @@ exports.main = async function (event, context, callback) {
             IndexName: process.env.GSI_NAME,
             KeyConditionExpression: "id = :id",
             ExpressionAttributeValues: {
-                ":id": event.arguments.input.id
+                ":id": event.arguments.id
             },
         }).promise();
-        console.log(JSON.stringify(data));
-        const [toBeDeleted] = data.Items;
-        let deleteParams = {
-            TableName: process.env.TABLE_NAME,
-            Key: {
-                guestbookId: toBeDeleted.guestbookId,
-                createdDate: toBeDeleted.createdDate,
-            }
-        };
-
-        await dynamoDB.delete(deleteParams).promise();
-        callback(null, toBeDeleted)
+        const [retrieved] = data.Items;
+        callback(null, retrieved)
     } catch (error) {
         const body = error.stack || JSON.stringify(error, null, 2);
         console.error('ERROR!!!', body)

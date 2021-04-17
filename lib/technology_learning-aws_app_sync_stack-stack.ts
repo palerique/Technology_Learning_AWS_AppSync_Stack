@@ -171,23 +171,13 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
             serviceRoleArn: guestbookRole.roleArn
         });
 
-        const getOneResolver = new CfnResolver(this, 'GetOneQueryResolver', {
-            apiId: commentsGraphQLApi.apiId,
-            typeName: 'Query',
-            fieldName: 'getGuestbookComment',
-            dataSourceName: dataSource.name,
-            requestMappingTemplate: getTextFromFile('resolvers/getGuestbookComment.vm'),
-            responseMappingTemplate: responseMappingTemplate
-        });
-        getOneResolver.addDependsOn(dataSource);
-
         const getAllResolver = new CfnResolver(this, 'GetAllQueryResolver', {
             apiId: commentsGraphQLApi.apiId,
             typeName: 'Query',
             fieldName: 'listGuestbookComments',
             dataSourceName: dataSource.name,
             requestMappingTemplate: MappingTemplate.fromFile('lib/resolvers/listGuestbookComments.vm').renderTemplate(),
-            responseMappingTemplate: '$util.toJson($ctx.result)'
+            responseMappingTemplate: MappingTemplate.dynamoDbResultItem().renderTemplate()
         });
         getAllResolver.addDependsOn(dataSource);
 
@@ -201,15 +191,23 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
         });
         saveResolver.addDependsOn(dataSource);
 
-        const updateResolver = new CfnResolver(this, 'UpdateMutationResolver', {
-            apiId: commentsGraphQLApi.apiId,
-            typeName: 'Mutation',
-            fieldName: 'updateGuestbookComment',
-            dataSourceName: dataSource.name,
-            requestMappingTemplate: getTextFromFile('resolvers/updateGuestbookComment.vm'),
-            responseMappingTemplate: responseMappingTemplate
+        const getHandlerLambda = new lambda.Function(this, "GetHandler", {
+            runtime: lambda.Runtime.NODEJS_14_X,
+            code: lambda.Code.fromAsset("lambdas"),
+            handler: "get.main",
+            environment: {
+                TABLE_NAME: commentsTable.tableName,
+                GSI_NAME: gsiProps.indexName
+            },
         });
-        updateResolver.addDependsOn(dataSource);
+        commentsTable.grantFullAccess(getHandlerLambda);
+
+        let getLambdaDataSource = commentsGraphQLApi.addLambdaDataSource('getHandlerLambdaDatasource', getHandlerLambda);
+        getLambdaDataSource.createResolver({
+            typeName: 'Query',
+            fieldName: 'getGuestbookComment',
+            responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
+        });
 
         const deleteHandlerLambda = new lambda.Function(this, "DeleteHandler", {
             runtime: lambda.Runtime.NODEJS_14_X,

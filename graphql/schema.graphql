@@ -19,7 +19,6 @@ type GuestbookComments {
 type Mutation {
     createGuestbookComment(input: CreateGuestbookCommentInput!): GuestbookComment
     deleteGuestbookComment(input: DeleteGuestbookCommentInput!): GuestbookComment
-    updateGuestbookComment(input: UpdateGuestbookCommentInput!): GuestbookComment
 }
 
 type Query {
@@ -48,11 +47,6 @@ input TableGuestbookCommentFilterInput {
     createdDate: TableStringFilterInput
     author: TableStringFilterInput
     message: TableStringFilterInput
-}
-
-input UpdateGuestbookCommentInput {
-    id: ID!
-    message: String
 }
 
 input TableIDFilterInput {
