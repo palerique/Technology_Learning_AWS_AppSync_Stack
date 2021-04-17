@@ -1,4 +1,4 @@
-import {AppSyncResolverHandler} from 'aws-lambda';
+import { AppSyncResolverHandler } from 'aws-lambda';
 import AWS from 'aws-sdk';
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
@@ -11,7 +11,7 @@ export const handler: AppSyncResolverHandler<DeleteGuestbookCommentInput, Guestb
   try {
     const data = await dynamoDB
       .query({
-        TableName: process.env.TABLE_NAME,
+        TableName: process.env.TABLE_NAME || '',
         IndexName: process.env.GSI_NAME,
         KeyConditionExpression: 'id = :id',
         ExpressionAttributeValues: {

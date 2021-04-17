@@ -4,6 +4,7 @@ import * as cdk from '@aws-cdk/core';
 import { TechnologyLearningAwsAppSyncStack } from '../lib/technology_learning-aws_app_sync_stack-stack';
 
 const app = new cdk.App();
+/* eslint-disable no-new */
 new TechnologyLearningAwsAppSyncStack(app, 'TechnologyLearningAwsAppSyncStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,

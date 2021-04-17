@@ -1,4 +1,3 @@
-import cdk = require('@aws-cdk/core');
 import {
   AuthorizationType,
   CfnApiKey,
@@ -24,6 +23,7 @@ import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from '
 import { datatype, date, helpers } from 'faker';
 import * as fs from 'fs';
 import * as Path from 'path';
+import cdk = require('@aws-cdk/core');
 
 const Quotes = require('randomquote-api');
 
@@ -56,25 +56,26 @@ function generateItem(): Comment {
 }
 
 function generateBatch(batchSize = 25): { PutRequest: { Item: Comment } }[] {
-  return new Array(batchSize).fill(undefined).map(() => {
-    return { PutRequest: { Item: generateItem() } };
-  });
+  return new Array(batchSize).fill(undefined).map(() => ({ PutRequest: { Item: generateItem() } }));
 }
 
 const responseMappingTemplate = '$util.toJson($ctx.result)';
 
-function outputUsefulInfo(param: any, api: GraphqlApi) {
+function outputUsefulInfo(param: TechnologyLearningAwsAppSyncStack, api: GraphqlApi) {
   // Prints out the AppSync GraphQL endpoint to the terminal
+  /* eslint-disable no-new */
   new cdk.CfnOutput(param, 'GraphQLAPIURL', {
     value: api.graphqlUrl,
   });
 
   // Prints out the AppSync GraphQL API key to the terminal
+  /* eslint-disable no-new */
   new cdk.CfnOutput(param, 'GraphQLAPIKey', {
     value: api.apiKey || '',
   });
 
   // Prints out the stack region to the terminal
+  /* eslint-disable no-new */
   new cdk.CfnOutput(param, 'Stack Region', {
     value: param.region,
   });
@@ -84,7 +85,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    //IAM:
+    // IAM:
     const guestbookRole = new Role(this, 'GuestbookCommentRole', {
       assumedBy: new ServicePrincipal('appsync.amazonaws.com'),
     });
@@ -93,7 +94,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AWSXrayFullAccess'));
     guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('CloudWatchFullAccess'));
 
-    //AppSync API
+    // AppSync API
     const commentsGraphQLApi = new GraphqlApi(this, 'GuestbookCommentApi', {
       name: 'guestbook-comment-api',
       schema: Schema.fromAsset('graphql/schema.graphql'),
@@ -113,11 +114,12 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       xrayEnabled: true,
     });
 
+    /* eslint-disable no-new */
     new CfnApiKey(this, 'GuestbookCommentApiKey', {
       apiId: commentsGraphQLApi.apiId,
     });
 
-    //DynamoDB Table
+    // DynamoDB Table
     const guestbookIdAttribute: Attribute = {
       name: 'guestbookId',
       type: AttributeType.STRING,
@@ -128,7 +130,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       type: AttributeType.STRING,
     };
 
-    let tableProps: TableProps = {
+    const tableProps: TableProps = {
       tableName: 'GuestbookCommentTable',
       partitionKey: guestbookIdAttribute,
       sortKey: createdDateAttribute,
@@ -144,14 +146,14 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       type: AttributeType.STRING,
     };
 
-    let gsiProps = {
+    const gsiProps = {
       indexName: 'get-and-delete-by-id-gsi',
       partitionKey: idAttribute,
       projectionType: ProjectionType.ALL,
     };
     commentsTable.addGlobalSecondaryIndex(gsiProps);
 
-    //Datasource resolvers:
+    // Datasource resolvers:
     const dataSource = new CfnDataSource(this, 'GuestbookCommentDataSource', {
       apiId: commentsGraphQLApi.apiId,
       name: 'GuestbookCommentDynamoDataSource',
@@ -179,7 +181,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       fieldName: 'createGuestbookComment',
       dataSourceName: dataSource.name,
       requestMappingTemplate: getTextFromFile('resolvers/createGuestbookComment.vm'),
-      responseMappingTemplate: responseMappingTemplate,
+      responseMappingTemplate,
     });
     saveResolver.addDependsOn(dataSource);
 
@@ -194,7 +196,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     });
     commentsTable.grantFullAccess(getHandlerLambda);
 
-    let getLambdaDataSource = commentsGraphQLApi.addLambdaDataSource('getHandlerLambdaDatasource', getHandlerLambda);
+    const getLambdaDataSource = commentsGraphQLApi.addLambdaDataSource('getHandlerLambdaDatasource', getHandlerLambda);
     getLambdaDataSource.createResolver({
       typeName: 'Query',
       fieldName: 'getGuestbookComment',
@@ -212,7 +214,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     });
     commentsTable.grantFullAccess(deleteHandlerLambda);
 
-    let deleteLambdaDataSource = commentsGraphQLApi.addLambdaDataSource(
+    const deleteLambdaDataSource = commentsGraphQLApi.addLambdaDataSource(
       'deleteHandlerLambdaDatasource',
       deleteHandlerLambda,
     );
@@ -222,7 +224,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
     });
 
-    //Add some data:
+    // Add some data:
     this.generateInitialData(commentsTable);
 
     outputUsefulInfo(this, commentsGraphQLApi);
@@ -230,6 +232,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 
   private generateInitialData(commentsTable: Table) {
     for (let i = 0; i < 10; i++) {
+      /* eslint-disable no-new */
       new AwsCustomResource(this, `initDBResourceBatch${i}`, {
         onCreate: {
           service: 'DynamoDB',
@@ -248,5 +251,6 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
+/* eslint-disable no-new */
 new TechnologyLearningAwsAppSyncStack(app, 'TechnologyLearningAwsAppSyncStack');
 app.synth();

@@ -23,23 +23,25 @@
       "./node_modules/@types"
     ],
     "moduleResolution": "node",
-    "sourceMap": true,
     "composite": true,
     "incremental": true
   },
   "exclude": [
     "cdk.out"
   ],
+//  "include": [
+//    "lib/technology_learning-aws_app_sync_stack-stack.ts"
+//  ],
 //  "files": [],
-//  "references": [
-//    {
-//      "path": "./lambda/getCommnent/tsconfig.build.json"
-//    },
-//    {
-//      "path": "./lambda/deleteCommnent/tsconfig.build.json"
-//    },
-//    {
-//      "path": "./lambda/listCommnents/tsconfig.build.json"
-//    }
-//  ]
+  "references": [
+    {
+      "path": "./lambda/getComment/tsconfig.build.json"
+    },
+    {
+      "path": "./lambda/deleteComment/tsconfig.build.json"
+    },
+    {
+      "path": "./lambda/listComments/tsconfig.build.json"
+    }
+  ]
 }
