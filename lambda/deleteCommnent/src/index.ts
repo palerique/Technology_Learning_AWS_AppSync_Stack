@@ -1,4 +1,4 @@
-import { AppSyncResolverHandler } from 'aws-lambda';
+import {AppSyncResolverHandler} from 'aws-lambda';
 import AWS from 'aws-sdk';
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();

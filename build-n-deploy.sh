@@ -10,10 +10,9 @@ set -x
 #  find . -name "tsconfig.build.tsbuildinfo" -type f -delete &&
 #  find . -name "tsconfig.tsbuildinfo" -type f -delete &&
 
-pushd lambdas || exit
+#pushd lambdas || exit
   yarn install &&
-  yarn script:build-dependency-layer &&
   yarn build
-popd || exit
+#popd || exit
 
 #TODO: add deployment part

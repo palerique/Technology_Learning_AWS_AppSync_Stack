@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "ES2018",
     "module": "commonjs",
-    "lib": ["es2018"],
+    "lib": [
+      "es2018"
+    ],
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -17,7 +19,27 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true
   },
-  "exclude": ["cdk.out"]
+  "exclude": [
+    "cdk.out"
+  ],
+//  "files": [],
+//  "references": [
+//    {
+//      "path": "./lambda/getCommnent/tsconfig.build.json"
+//    },
+//    {
+//      "path": "./lambda/deleteCommnent/tsconfig.build.json"
+//    },
+//    {
+//      "path": "./lambda/listCommnents/tsconfig.build.json"
+//    }
+//  ]
 }

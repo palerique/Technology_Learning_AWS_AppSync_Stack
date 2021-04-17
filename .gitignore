@@ -1,5 +1,27 @@
 *.d.ts
 node_modules
+dist/*
+
+lambda/**/dist/*
+lambda/**/*.zip
+layer/**/dist/*
+layer/**/*.zip
+layer/**/src/**/*.js
+layer/**/src/**/*.js.map
+layer/**/src/**/*.d.ts
+
+*.tsbuildinfo
+.idea
+.vs
+.vscode
+/**/package-lock.json
+!/**/yarn.lock
+/**/coverage/
+
+!/terraform/terraform.tfstate
+!/terraform/terraform.tfstate.backup
+/yarn.lock
+/yarn-error.log
 
 # CDK asset staging directory
 .cdk.staging
