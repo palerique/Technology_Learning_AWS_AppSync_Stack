@@ -7,6 +7,7 @@ export default {
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  runner: 'jest-serial-runner',
   testEnvironment: 'node',
   transform: {
     '^.+\\.ts?$': 'ts-jest',

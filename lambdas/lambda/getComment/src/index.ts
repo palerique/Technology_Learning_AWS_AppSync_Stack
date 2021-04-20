@@ -1,49 +1,38 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
-import { DynamoDB } from 'aws-sdk';
-import { ScanInput } from 'aws-sdk/clients/dynamodb';
+import { AppSyncResolverHandler } from 'aws-lambda';
+import * as AWS from 'aws-sdk';
+import { GetGuestbookCommentInput } from 'generic-stuff/dist/types/GetGuestbookCommentInput';
+import { GuestbookComment } from 'generic-stuff/dist/types/GuestbookComment';
 
-const dynamoDb = new DynamoDB.DocumentClient();
-const params: ScanInput = {
-  TableName: process.env.DYNAMODB_TABLE || 'Heroes',
-};
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-interface Hero {
-  id: string;
-  name: string;
-}
+export const handler: AppSyncResolverHandler<GetGuestbookCommentInput, GuestbookComment> = async (event) => {
+  try {
+    const data = await dynamoDB
+      .query({
+        TableName: process.env.TABLE_NAME || '',
+        IndexName: process.env.GSI_NAME,
+        KeyConditionExpression: 'id = :id',
+        ExpressionAttributeValues: {
+          ':id': event.arguments.id,
+        },
+      })
+      .promise();
 
-function getData(): { heroes: Hero[] } {
-  const heroes: Hero[] = [
-    { id: '11', name: 'Dr Nice' },
-    { id: '12', name: 'Narco' },
-    { id: '13', name: 'Bombasto' },
-    { id: '14', name: 'Celeritas' },
-    { id: '15', name: 'Magneta' },
-    { id: '16', name: 'RubberMan' },
-    { id: '17', name: 'Dynama' },
-    { id: '18', name: 'Dr IQ' },
-    { id: '19', name: 'Magma' },
-    { id: '20', name: 'Tornado' },
-  ];
-  return { heroes };
-}
-
-export const handler: APIGatewayProxyHandler = (event, context) => {
-  // fetch all todos from the database
-  // For production workloads you should design your tables and indexes so that your applications can use Query instead of Scan.
-  dynamoDb.scan(params, (error, queryResult) => {
-    // handle potential errors
-    if (error) {
-      console.error(error);
-      return {
-        statusCode: error.statusCode || 501,
-        headers: { 'Content-Type': 'text/plain' },
-        body: "Couldn't fetch the todo items.",
-      };
+    if (!data.Items || data.Items.length === 0) {
+      throw new Error('Result set contains no items');
     }
+
+    const attributeMap = data.Items[0];
     return {
-      statusCode: 200,
-      body: JSON.stringify({ result: queryResult, data: getData(), event, context }, null, 2),
+      author: attributeMap.author,
+      createdDate: attributeMap.createdDate,
+      guestbookId: attributeMap.guestbookId,
+      id: attributeMap.id,
+      message: attributeMap.message,
     };
-  });
+  } catch (error) {
+    const body = error.stack || JSON.stringify(error, null, 2);
+    console.error('ERROR!!!', body);
+    throw error;
+  }
 };
