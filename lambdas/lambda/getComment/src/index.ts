@@ -2,6 +2,7 @@ import { AppSyncResolverHandler } from 'aws-lambda';
 import * as AWS from 'aws-sdk';
 import { GetGuestbookCommentInput } from 'generic-stuff/dist/types/GetGuestbookCommentInput';
 import { GuestbookComment } from 'generic-stuff/dist/types/GuestbookComment';
+import { convertAttributeMapToComment } from 'generic-stuff/dist/util/Conversor';
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
@@ -22,14 +23,7 @@ export const handler: AppSyncResolverHandler<GetGuestbookCommentInput, Guestbook
       throw new Error('Result set contains no items');
     }
 
-    const attributeMap = data.Items[0];
-    return {
-      author: attributeMap.author,
-      createdDate: attributeMap.createdDate,
-      guestbookId: attributeMap.guestbookId,
-      id: attributeMap.id,
-      message: attributeMap.message,
-    };
+    return convertAttributeMapToComment(data.Items[0]);
   } catch (error) {
     const body = error.stack || JSON.stringify(error, null, 2);
     console.error('ERROR!!!', body);

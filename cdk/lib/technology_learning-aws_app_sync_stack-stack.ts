@@ -171,15 +171,15 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       serviceRoleArn: guestbookRole.roleArn
     });
 
-    const getAllResolver = new CfnResolver(this, 'GetAllQueryResolver', {
-      apiId: commentsGraphQLApi.apiId,
-      typeName: 'Query',
-      fieldName: 'listGuestbookComments',
-      dataSourceName: dataSource.name,
-      requestMappingTemplate: MappingTemplate.fromFile('lib/resolvers/listGuestbookComments.vm').renderTemplate(),
-      responseMappingTemplate: MappingTemplate.dynamoDbResultItem().renderTemplate()
-    });
-    getAllResolver.addDependsOn(dataSource);
+    // const getAllResolver = new CfnResolver(this, 'GetAllQueryResolver', {
+    //   apiId: commentsGraphQLApi.apiId,
+    //   typeName: 'Query',
+    //   fieldName: 'listGuestbookComments',
+    //   dataSourceName: dataSource.name,
+    //   requestMappingTemplate: MappingTemplate.fromFile('lib/resolvers/listGuestbookComments.vm').renderTemplate(),
+    //   responseMappingTemplate: MappingTemplate.dynamoDbResultItem().renderTemplate()
+    // });
+    // getAllResolver.addDependsOn(dataSource);
 
     const saveResolver = new CfnResolver(this, 'SaveMutationResolver', {
       apiId: commentsGraphQLApi.apiId,
@@ -214,6 +214,27 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     getLambdaDataSource.createResolver({
       typeName: 'Query',
       fieldName: 'getGuestbookComment',
+      responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
+    });
+
+    const listHandlerLambda = new lambda.Function(this, "ListHandler", {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset("../lambdas/lambda/listComments/dist"),
+      handler: "index.handler",
+      layers: [
+        genericStuffLayer
+      ],
+      environment: {
+        TABLE_NAME: commentsTable.tableName,
+        GSI_NAME: gsiProps.indexName
+      },
+    });
+    commentsTable.grantFullAccess(listHandlerLambda);
+
+    let listLambdaDataSource = commentsGraphQLApi.addLambdaDataSource('listHandlerLambdaDatasource', listHandlerLambda);
+    listLambdaDataSource.createResolver({
+      typeName: 'Query',
+      fieldName: 'listGuestbookComments',
       responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
     });
 

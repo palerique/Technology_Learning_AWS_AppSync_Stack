@@ -1,49 +1,37 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
-import { DynamoDB } from 'aws-sdk';
-import { ScanInput } from 'aws-sdk/clients/dynamodb';
+import { AppSyncResolverHandler } from 'aws-lambda';
+import * as AWS from 'aws-sdk';
+import { TableGuestbookCommentFilterInput } from 'generic-stuff/dist/types/TableGuestbookCommentFilterInput';
+import { GuestbookComment } from 'generic-stuff/dist/types/GuestbookComment';
+import { convertAttributeMapCollectionToCommentCollection } from 'generic-stuff/dist/util/Conversor';
 
-const dynamoDb = new DynamoDB.DocumentClient();
-const params: ScanInput = {
-  TableName: process.env.DYNAMODB_TABLE || '',
-};
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-interface Hero {
-  id: string;
-  name: string;
-}
+export const handler: AppSyncResolverHandler<TableGuestbookCommentFilterInput, GuestbookComment[]> = async (event) => {
+  try {
+    console.log('event', event);
 
-function getData(): { heroes: Hero[] } {
-  const heroes: Hero[] = [
-    { id: '11', name: 'Dr Nice' },
-    { id: '12', name: 'Narco' },
-    { id: '13', name: 'Bombasto' },
-    { id: '14', name: 'Celeritas' },
-    { id: '15', name: 'Magneta' },
-    { id: '16', name: 'RubberMan' },
-    { id: '17', name: 'Dynama' },
-    { id: '18', name: 'Dr IQ' },
-    { id: '19', name: 'Magma' },
-    { id: '20', name: 'Tornado' },
-  ];
-  return { heroes };
-}
+    const data = await dynamoDB
+      .scan({
+        TableName: process.env.TABLE_NAME || '',
+        Limit: event.arguments.input.limit || 20,
+      })
+      .promise();
 
-export const handler: APIGatewayProxyHandler = (event, context) => {
-  // fetch all todos from the database
-  // For production workloads you should design your tables and indexes so that your applications can use Query instead of Scan.
-  dynamoDb.scan(params, (error, queryResult) => {
-    // handle potential errors
-    if (error) {
-      console.error(error);
-      return {
-        statusCode: error.statusCode || 501,
-        headers: { 'Content-Type': 'text/plain' },
-        body: "Couldn't fetch the todo items.",
-      };
+    console.log('data', data);
+    let result: GuestbookComment[];
+
+    if (!data.Items || data.Items.length === 0) {
+      result = [];
+    } else {
+      result = convertAttributeMapCollectionToCommentCollection(data.Items);
     }
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ result: queryResult, data: getData(), event, context }, null, 2),
-    };
-  });
+
+    console.log('result', result);
+
+    return result;
+  } catch (error) {
+    const body = error.stack || JSON.stringify(error, null, 2);
+    console.error('ERROR!!!', body);
+    throw error;
+  }
 };

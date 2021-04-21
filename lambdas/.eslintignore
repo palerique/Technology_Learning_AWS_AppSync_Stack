@@ -1,3 +1,5 @@
 dist
 node_modules
 *.d.ts
+layer/genericStuff/src/util/dynamodb-filter.ts
+layer/genericStuff/src/util/dynamodb-utils.ts
