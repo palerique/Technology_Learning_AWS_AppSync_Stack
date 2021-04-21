@@ -10,7 +10,7 @@ GENERIC_STUFF_PKG_DIR="$GENERIC_STUFF_OUTPUT_DIR/layers/nodejs"
 cd "$GENERIC_STUFF_DIR"
 
 npm install
-tsc
+tsc --build --pretty --verbose tsconfig.build.json
 
 mkdir -p "$GENERIC_STUFF_PKG_DIR"
 

@@ -24,13 +24,17 @@ interface TableIDFilterInput {
   notContains: string;
 }
 
+export interface ListFilter {
+  guestbookId: TableStringFilterInput;
+  id: TableIDFilterInput;
+  createdDate: TableStringFilterInput;
+  author: TableStringFilterInput;
+  message: TableStringFilterInput;
+}
+
 export interface TableGuestbookCommentFilterInput {
   input: {
-    guestbookId: TableStringFilterInput;
-    id: TableIDFilterInput;
-    createdDate: TableStringFilterInput;
-    author: TableStringFilterInput;
-    message: TableStringFilterInput;
+    filter: ListFilter;
     limit: number;
     nextToken: string;
   };

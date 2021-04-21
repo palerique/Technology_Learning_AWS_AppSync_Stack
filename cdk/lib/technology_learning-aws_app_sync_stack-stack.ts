@@ -235,7 +235,11 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     listLambdaDataSource.createResolver({
       typeName: 'Query',
       fieldName: 'listGuestbookComments',
-      responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
+      responseMappingTemplate: {
+        renderTemplate(): string {
+          return '$util.toJson($ctx.result)'
+        }
+      }
     });
 
     const deleteHandlerLambda = new lambda.Function(this, "DeleteHandler", {
