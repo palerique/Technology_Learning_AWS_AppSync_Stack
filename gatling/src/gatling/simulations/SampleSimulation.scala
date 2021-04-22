@@ -1,15 +1,19 @@
 import scala.concurrent.duration._
-
 import io.gatling.core.Predef._
+import io.gatling.core.feeder.BatchableFeederBuilder
+import io.gatling.core.structure.{ChainBuilder, ScenarioBuilder}
 import io.gatling.http.Predef._
+import io.gatling.http.protocol.HttpProtocolBuilder
+
+import scala.language.postfixOps
 
 class SampleSimulation extends Simulation {
 
   object Search {
 
-    val feeder = csv("search.csv").random
+    val feeder: BatchableFeederBuilder[String]#F = csv("search.csv").random
 
-    val search = exec(
+    val search: ChainBuilder = exec(
       http("Home")
         .get("/")
     ).pause(1)
@@ -28,7 +32,7 @@ class SampleSimulation extends Simulation {
       .pause(1)
   }
 
-  val httpProtocol = http
+  val httpProtocol: HttpProtocolBuilder = http
     .baseUrl("http://computer-database.gatling.io")
     .acceptHeader("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
     .doNotTrackHeader("1")
@@ -36,7 +40,7 @@ class SampleSimulation extends Simulation {
     .acceptEncodingHeader("gzip, deflate")
     .userAgentHeader("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:16.0) Gecko/20100101 Firefox/16.0")
 
-  val users = scenario("Users").exec(Search.search)
+  val users: ScenarioBuilder = scenario("Users").exec(Search.search)
 
-  setUp(users.inject(rampUsers(1) during (1 seconds))).protocols(httpProtocol)
+  setUp(users.inject(rampUsers(100) during (100 seconds))).protocols(httpProtocol)
 }
