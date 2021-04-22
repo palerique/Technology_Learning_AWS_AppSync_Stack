@@ -14,12 +14,7 @@ export const handler: AppSyncResolverHandler<TableGuestbookCommentFilterInput, {
   try {
     console.log('event', event);
 
-    // const filterExpression = 'visible = :visible AND portfolio = :portfolio';
     const filterExpression = undefined;
-    // const expressionAttributeValues = {
-    //   ':visible': true, // Return only visible offers
-    //   ':portfolio': '0001',
-    // };
     const expressionAttributeValues = undefined;
 
     const params: ScanInput = {
@@ -31,7 +26,6 @@ export const handler: AppSyncResolverHandler<TableGuestbookCommentFilterInput, {
 
     const data = await dynamoDB.scan(params).promise();
 
-    console.log('data', data);
     let result: GuestbookComment[];
 
     if (!data.Items || data.Items.length === 0) {
@@ -39,8 +33,6 @@ export const handler: AppSyncResolverHandler<TableGuestbookCommentFilterInput, {
     } else {
       result = convertAttributeMapCollectionToCommentCollection(data.Items);
     }
-
-    console.log('result', result);
 
     return { items: result };
   } catch (error) {

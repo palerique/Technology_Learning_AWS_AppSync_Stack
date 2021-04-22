@@ -171,16 +171,6 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       serviceRoleArn: guestbookRole.roleArn
     });
 
-    // const getAllResolver = new CfnResolver(this, 'GetAllQueryResolver', {
-    //   apiId: commentsGraphQLApi.apiId,
-    //   typeName: 'Query',
-    //   fieldName: 'listGuestbookComments',
-    //   dataSourceName: dataSource.name,
-    //   requestMappingTemplate: MappingTemplate.fromFile('lib/resolvers/listGuestbookComments.vm').renderTemplate(),
-    //   responseMappingTemplate: MappingTemplate.dynamoDbResultItem().renderTemplate()
-    // });
-    // getAllResolver.addDependsOn(dataSource);
-
     const saveResolver = new CfnResolver(this, 'SaveMutationResolver', {
       apiId: commentsGraphQLApi.apiId,
       typeName: 'Mutation',
