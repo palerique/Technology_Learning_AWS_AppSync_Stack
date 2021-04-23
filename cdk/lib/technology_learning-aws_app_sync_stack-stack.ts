@@ -18,12 +18,13 @@ import {
   Table,
   TableProps
 } from '@aws-cdk/aws-dynamodb';
-import {ManagedPolicy, Role, ServicePrincipal} from '@aws-cdk/aws-iam';
+import {Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal} from '@aws-cdk/aws-iam';
 import * as lambda from "@aws-cdk/aws-lambda";
 import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId} from '@aws-cdk/custom-resources';
 import {datatype, date, helpers} from 'faker';
 import * as fs from 'fs';
 import * as Path from "path";
+import {CfnCluster} from "@aws-cdk/aws-dax";
 
 const Quotes = require('randomquote-api')
 
@@ -159,6 +160,24 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     };
     commentsTable.addGlobalSecondaryIndex(gsiProps)
 
+    //DAX:
+    const daxRole = new Role(this, 'daxRole', {
+      assumedBy: new ServicePrincipal('dax.amazonaws.com'),
+    });
+
+    daxRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['dynamodb:*'],
+      resources: [commentsTable.tableArn],
+    }));
+
+    const daxCluster = new CfnCluster(this, 'dax', {
+      clusterName: 'comment-table-dax-cluster',
+      iamRoleArn: daxRole.roleArn,
+      nodeType: 'dax.t2.small',
+      replicationFactor: 2
+    });
+
     //Datasource resolvers:
     const dataSource = new CfnDataSource(this, 'GuestbookCommentDataSource', {
       apiId: commentsGraphQLApi.apiId,
@@ -195,7 +214,8 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       ],
       environment: {
         TABLE_NAME: commentsTable.tableName,
-        GSI_NAME: gsiProps.indexName
+        GSI_NAME: gsiProps.indexName,
+        DAX_URL: daxCluster.attrClusterDiscoveryEndpoint
       },
     });
     commentsTable.grantFullAccess(getHandlerLambda);
@@ -216,7 +236,8 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       ],
       environment: {
         TABLE_NAME: commentsTable.tableName,
-        GSI_NAME: gsiProps.indexName
+        GSI_NAME: gsiProps.indexName,
+        DAX_URL: daxCluster.attrClusterDiscoveryEndpoint
       },
     });
     commentsTable.grantFullAccess(listHandlerLambda);
@@ -241,7 +262,8 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       ],
       environment: {
         TABLE_NAME: commentsTable.tableName,
-        GSI_NAME: gsiProps.indexName
+        GSI_NAME: gsiProps.indexName,
+        DAX_URL: daxCluster.attrClusterDiscoveryEndpoint
       },
     });
     commentsTable.grantFullAccess(deleteHandlerLambda);
