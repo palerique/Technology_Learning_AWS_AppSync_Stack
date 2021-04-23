@@ -1,0 +1,6 @@
+{
+  "query": "query MyQuery {listGuestbookComments { items { author createdDate guestbookId id message } } }",
+  "variables": null,
+  "operationName": "MyQuery"
+}
+

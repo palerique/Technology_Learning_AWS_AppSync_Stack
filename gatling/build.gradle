@@ -1,7 +1,10 @@
 plugins {
-  id "com.github.lkishalmi.gatling" version "3.3.4"
+  id 'io.gatling.gradle' version '3.5.1'
 }
 
-repositories {
-  jcenter()
+gatling {
+  // WARNING: options below only work when logback config file isn't provided
+  logLevel = 'WARN' // logback root level
+  logHttp = 'FAILURES' // set to 'ALL' for all HTTP traffic in TRACE, 'FAILURES' for failed HTTP traffic in DEBUG
+  //  logHttp = 'ALL' // set to 'ALL' for all HTTP traffic in TRACE, 'FAILURES' for failed HTTP traffic in DEBUG
 }
