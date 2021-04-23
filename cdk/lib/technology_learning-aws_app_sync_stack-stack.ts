@@ -24,7 +24,8 @@ import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId} from '@a
 import {datatype, date, helpers} from 'faker';
 import * as fs from 'fs';
 import * as Path from "path";
-import {CfnCluster} from "@aws-cdk/aws-dax";
+import { CfnCluster, CfnSubnetGroup } from "@aws-cdk/aws-dax";
+import * as ec2  from '@aws-cdk/aws-ec2';
 
 const Quotes = require('randomquote-api')
 
@@ -90,8 +91,8 @@ function outputUsefulInfo(param: any, api: GraphqlApi) {
 
 export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+  constructor(scope: cdk.Construct, id: string) {
+    super(scope, id);
 
     //IAM:
     const guestbookRole = new Role(this, 'GuestbookCommentRole', {
@@ -161,6 +162,20 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     commentsTable.addGlobalSecondaryIndex(gsiProps)
 
     //DAX:
+    const vpc = ec2.Vpc.fromVpcAttributes(this, 'VPC', {
+      vpcId: 'vpc-guestbook',
+      availabilityZones: ['us-east-1a'],
+      publicSubnetIds: ['subnet-pub'],
+      privateSubnetIds: ['subnet-priv'],
+    })
+
+    let subnetIds = vpc.publicSubnets.map(s => s.subnetId);
+    const subnetGroup = new CfnSubnetGroup(this, 'DaxSubnetGroup', {
+      subnetGroupName: "dax-test-subntgroup",
+      description: "for dax test",
+      subnetIds: subnetIds,
+    })
+
     const daxRole = new Role(this, 'daxRole', {
       assumedBy: new ServicePrincipal('dax.amazonaws.com'),
     });
@@ -172,10 +187,11 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     }));
 
     const daxCluster = new CfnCluster(this, 'dax', {
-      clusterName: 'comment-table-dax-cluster',
+      clusterName: 'table-dax-cluster',
       iamRoleArn: daxRole.roleArn,
       nodeType: 'dax.t2.small',
-      replicationFactor: 2
+      replicationFactor: 2,
+      subnetGroupName: subnetGroup.subnetGroupName,
     });
 
     //Datasource resolvers:

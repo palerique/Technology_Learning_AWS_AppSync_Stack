@@ -2,7 +2,7 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 12,
+    "ecmaVersion": 2020,
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
@@ -64,13 +64,20 @@
   "overrides": [
     {
       "files": [
-        "lambda/**/src/**/*.ts"
+        "./lambda/**/src/**/*.ts",
+        "./layer/**/src/**/*.ts"
       ],
       "parser": "@typescript-eslint/parser",
       "parserOptions": {
-        "ecmaVersion": 12,
+        "ecmaVersion": 2020,
         "sourceType": "module",
-        "project": "./lambda/**/tsconfig.json"
+        "project": [
+          "./tsconfig.json",
+          "./lambda/**/tsconfig.json",
+          "./lambda/**/tsconfig.build.json",
+          "./layer/**/tsconfig.json",
+          "./layer/**/tsconfig.build.json"
+        ]
       },
       "rules": {
         "no-undef": "off",
