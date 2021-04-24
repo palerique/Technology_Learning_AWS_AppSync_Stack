@@ -37,6 +37,9 @@ export async function listComments(
 
     const data = await client.scan(params).promise();
 
+    console.log({ data });
+    console.log({ client });
+
     let result: GuestbookComment[];
 
     if (!data.Items || data.Items.length === 0) {
@@ -44,6 +47,8 @@ export async function listComments(
     } else {
       result = convertAttributeMapCollectionToCommentCollection(data.Items);
     }
+
+    console.log({ result });
 
     return { items: result };
   } catch (error) {
