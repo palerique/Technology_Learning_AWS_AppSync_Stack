@@ -5,7 +5,7 @@ import { GuestbookComment } from '../types/GuestbookComment';
 import { convertAttributeMapCollectionToCommentCollection } from '../util/Conversor';
 import ScanInput = DocumentClient.ScanInput;
 
-const AmazonDaxClient = require('amazon-dax-client');
+import * as AmazonDaxClient from 'amazon-dax-client'
 
 export async function listComments(
   commentFilterInput: TableGuestbookCommentFilterInput,
@@ -21,7 +21,7 @@ export async function listComments(
     });
 
     const ddbClient = new AWS.DynamoDB.DocumentClient();
-    const dax = new AmazonDaxClient({ endpoints: [process.env.DAX_URL], region });
+    const dax = new AmazonDaxClient({ endpoints: [process.env.DAX_URL || ''], region });
     const daxClient = new AWS.DynamoDB.DocumentClient({ service: dax });
     const client = daxClient != null ? daxClient : ddbClient;
 
