@@ -7,7 +7,7 @@ export const handler: AppSyncResolverHandler<TableGuestbookCommentFilterInput, {
   event,
 ) => {
   console.log({ event });
-  const result = listComments(event.arguments);
+  const result = await listComments(event.arguments);
   console.log({ result });
   return result;
 };

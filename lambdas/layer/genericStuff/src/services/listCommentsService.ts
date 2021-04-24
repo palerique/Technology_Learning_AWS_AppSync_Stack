@@ -7,26 +7,28 @@ import ScanInput = DocumentClient.ScanInput;
 
 const AmazonDaxClient = require('amazon-dax-client');
 
-const region = 'us-east-1';
-
-AWS.config.update({
-  region,
-});
-
-const ddbClient = new AWS.DynamoDB.DocumentClient();
-const dax = new AmazonDaxClient({ endpoints: [process.env.DAX_URL], region });
-const daxClient = new AWS.DynamoDB.DocumentClient({ service: dax });
-const client = daxClient != null ? daxClient : ddbClient;
-
 export async function listComments(
   commentFilterInput: TableGuestbookCommentFilterInput,
 ): Promise<{ items: GuestbookComment[] }> {
   try {
     console.log({ commentFilterInput });
-    console.log(process.env);
+    console.log({ env: process.env });
+
+    const region = 'us-east-1';
+
+    AWS.config.update({
+      region,
+    });
+
+    const ddbClient = new AWS.DynamoDB.DocumentClient();
+    const dax = new AmazonDaxClient({ endpoints: [process.env.DAX_URL], region });
+    const daxClient = new AWS.DynamoDB.DocumentClient({ service: dax });
+    const client = daxClient != null ? daxClient : ddbClient;
 
     const filterExpression = undefined;
     const expressionAttributeValues = undefined;
+
+    console.log({ client, daxClient, dax, ddbClient });
 
     const params: ScanInput = {
       TableName: process.env.TABLE_NAME || '',
@@ -36,9 +38,7 @@ export async function listComments(
     };
 
     const data = await client.scan(params).promise();
-
     console.log({ data });
-    console.log({ client });
 
     let result: GuestbookComment[];
 
