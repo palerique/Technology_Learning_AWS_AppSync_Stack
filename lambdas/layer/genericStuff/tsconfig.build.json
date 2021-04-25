@@ -4,6 +4,7 @@
     "src/**/*"
   ],
   "compilerOptions": {
+    "esModuleInterop": true,
     "outDir": "dist",
     "rootDir": "src"
   }

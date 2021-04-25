@@ -1,11 +1,14 @@
 {
   "extends": "../../tsconfig.json",
   "include": [
-      "src",
+    "src",
     "test"
   ],
   "compilerOptions": {
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    "module": "CommonJS",
+    "moduleResolution": "node",
   }
 }
