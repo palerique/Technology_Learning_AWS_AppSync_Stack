@@ -5,7 +5,10 @@ import { TableGuestbookCommentFilterInput } from 'generic-stuff/dist/types/Table
 import { GuestbookComment } from 'generic-stuff/dist/types/GuestbookComment';
 import { convertAttributeMapCollectionToCommentCollection } from 'generic-stuff/dist/util/Conversor';
 
-import * as AmazonDaxClient from 'amazon-dax-client';
+// import { AmazonDaxClient } from 'amazon-dax-client';
+// eslint-disable-next-line
+// @ts-ignore
+import AmazonDaxClient = require('amazon-dax-client');
 
 export const handler: AppSyncResolverHandler<TableGuestbookCommentFilterInput, { items: GuestbookComment[] }> = async (
   event,

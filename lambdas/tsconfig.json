@@ -28,8 +28,7 @@
     ],
     "moduleResolution": "node",
     "composite": true,
-    "incremental": true,
-    "esModuleInterop": true
+    "incremental": true
   },
   "exclude": [
     "cdk.out"

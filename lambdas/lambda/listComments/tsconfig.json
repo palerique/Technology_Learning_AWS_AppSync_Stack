@@ -5,7 +5,6 @@
     "test"
   ],
   "compilerOptions": {
-    "esModuleInterop": true,
     "skipLibCheck": true,
 
     "module": "CommonJS",
