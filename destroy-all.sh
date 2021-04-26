@@ -1,2 +1,7 @@
 #!/usr/bin/env bash
-#TODO
+set -x
+set -e
+
+pushd cdk || exit
+  cdk destroy --force
+popd || exit
