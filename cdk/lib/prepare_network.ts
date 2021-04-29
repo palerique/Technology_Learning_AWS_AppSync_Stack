@@ -21,22 +21,10 @@ export function prepareNetwork(stack: TechnologyLearningAwsAppSyncStack) {
 
   const vpc = new ec2.Vpc(stack, 'guestbook-vpc', {
     cidr: "10.0.0.0/" + 16,
-    maxAzs: 2,
+    maxAzs: 1,
     subnetConfiguration: [isolatedSubnetProps, pubSubnetProps],
     natGateways: 0
   });
-
-  // const pubSubnet = new ec2.Subnet(stack, pubSubnetProps.name, {
-  //   availabilityZone: vpc.availabilityZones[0],
-  //   cidrBlock: pubSubnetProps.cidrBlock,
-  //   vpcId: vpc.vpcId
-  // });
-  //
-  // const pvtSubnet = new ec2.Subnet(stack, isolatedSubnetProps.name, {
-  //   availabilityZone: vpc.availabilityZones[0],
-  //   cidrBlock: isolatedSubnetProps.cidrBlock,
-  //   vpcId: vpc.vpcId
-  // });
 
   // create cfn output vpc id
   new cdk.CfnOutput(stack, 'VpcIdOutput', {
@@ -61,10 +49,17 @@ export function prepareNetwork(stack: TechnologyLearningAwsAppSyncStack) {
     })
   );
 
+  let subnetIds = vpc.isolatedSubnets.concat(vpc.publicSubnets).map(subnet => subnet.subnetId);
+  console.log(subnetIds);
+  new cdk.CfnOutput(stack, `All Subnets ids Output`, {
+    description: `All Subnets ids`,
+    value: `${subnetIds}`
+  })
+
   const subnetGroup = new CfnSubnetGroup(stack, 'DaxSubnetGroup', {
     subnetGroupName: "dax-test-subntgroup",
     description: "for dax test",
-    subnetIds: [vpc.isolatedSubnets[0].subnetId],
+    subnetIds,
   });
 
   return { vpc, subnetGroup };

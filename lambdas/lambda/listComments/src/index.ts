@@ -26,7 +26,9 @@ export const handler: AppSyncResolverHandler<TableGuestbookCommentFilterInput, {
 
     // const ddbClient = new AWS.DynamoDB.DocumentClient();
     console.log('creating dax');
-    const dax = new AmazonDaxClient({ endpoints: [process.env.DAX_URL || ''], region });
+    const daxEndpoint = process.env.DAX_URL || '';
+    console.log(`DAX ENDPOINT = ${daxEndpoint}`);
+    const dax = new AmazonDaxClient({ endpoints: [daxEndpoint], region });
     console.log('creating daxClient');
     const daxClient = new AWS.DynamoDB.DocumentClient({ service: dax });
 

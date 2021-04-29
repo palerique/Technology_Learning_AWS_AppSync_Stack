@@ -10,6 +10,8 @@ import { prepareNetwork } from "./prepare_network";
 import { prepareDax } from "./prepare_dax";
 import { prepareDynamoDb } from "./prepare_dynamo_db";
 import { generateInitialData } from "./generate_initial_data";
+import { Duration } from "@aws-cdk/core";
+import { Effect, PolicyStatement } from "@aws-cdk/aws-iam";
 
 function getTextFromFile(path: string) {
   return fs.readFileSync(Path.join(__dirname, path), 'utf-8').toString();
@@ -52,7 +54,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
 
     const genericStuffLayer = new lambda.LayerVersion(this, 'GenericStuffLayer', {
       code: lambda.Code.fromAsset("../lambdas/layer/genericStuff/packaged-dist/layers.zip"),
-      compatibleRuntimes: [lambda.Runtime.NODEJS_14_X]
+      compatibleRuntimes: [lambda.Runtime.NODEJS_10_X, lambda.Runtime.NODEJS_14_X]
     });
 
     const getHandlerLambda = new lambda.Function(this, "GetHandler", {
@@ -78,7 +80,8 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     });
 
     const listHandlerLambda = new lambda.Function(this, "ListHandler", {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_10_X,
+      timeout: Duration.seconds(60),
       code: lambda.Code.fromAsset("../lambdas/lambda/listComments/dist"),
       handler: "index.handler",
       layers: [
@@ -90,6 +93,11 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
         GSI_NAME: gsiProps.indexName,
         DAX_URL: daxCluster.attrClusterDiscoveryEndpoint
       },
+      initialPolicy: [new PolicyStatement({
+        actions: ['dynamodb:*'],
+        effect: Effect.ALLOW,
+        resources: [commentsTable.tableArn]
+      })]
     });
     commentsTable.grantFullAccess(listHandlerLambda);
 
