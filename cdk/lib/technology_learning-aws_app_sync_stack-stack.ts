@@ -1,17 +1,18 @@
 import cdk = require('@aws-cdk/core');
-import { CfnDataSource, CfnResolver, MappingTemplate } from '@aws-cdk/aws-appsync';
+import * as appsync from '@aws-cdk/aws-appsync';
+import * as ec2 from '@aws-cdk/aws-ec2';
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as fs from 'fs';
 import * as Path from "path";
-import { prepareIam } from "./prepare_iam";
+import { Duration } from "@aws-cdk/core";
+
+import { prepareAppSyncIam, prepareDaxIam } from "./prepare_iam";
 import { outputUsefulInfo } from "./output_useful_info";
 import { prepareAppSync } from "./prepare_app_sync";
 import { prepareNetwork } from "./prepare_network";
 import { prepareDax } from "./prepare_dax";
 import { prepareDynamoDb } from "./prepare_dynamo_db";
 import { generateInitialData } from "./generate_initial_data";
-import { Duration } from "@aws-cdk/core";
-import { Effect, PolicyStatement } from "@aws-cdk/aws-iam";
 
 function getTextFromFile(path: string) {
   return fs.readFileSync(Path.join(__dirname, path), 'utf-8').toString();
@@ -24,14 +25,23 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string) {
     super(scope, id);
 
-    const guestbookRole = prepareIam(this);
+    const guestbookRole = prepareAppSyncIam(this);
+    const daxRole = prepareDaxIam(this);
+
+    const {
+      vpc,
+      subnetGroup,
+      subnet,
+      securityGroup
+    } = prepareNetwork(this);
+
     const commentsGraphQLApi = prepareAppSync(this, guestbookRole);
     let { commentsTable, gsiProps } = prepareDynamoDb(this);
-    const { vpc, subnetGroup } = prepareNetwork(this);
-    const daxCluster = prepareDax(this, commentsTable, subnetGroup);
+
+    const daxCluster = prepareDax(this, commentsTable, subnetGroup, securityGroup, daxRole);
 
     //Datasource resolvers:
-    const dataSource = new CfnDataSource(this, 'GuestbookCommentDataSource', {
+    const dataSource = new appsync.CfnDataSource(this, 'GuestbookCommentDataSource', {
       apiId: commentsGraphQLApi.apiId,
       name: 'GuestbookCommentDynamoDataSource',
       type: 'AMAZON_DYNAMODB',
@@ -42,7 +52,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       serviceRoleArn: guestbookRole.roleArn
     });
 
-    const saveResolver = new CfnResolver(this, 'SaveMutationResolver', {
+    const saveResolver = new appsync.CfnResolver(this, 'SaveMutationResolver', {
       apiId: commentsGraphQLApi.apiId,
       typeName: 'Mutation',
       fieldName: 'createGuestbookComment',
@@ -76,9 +86,10 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     getLambdaDataSource.createResolver({
       typeName: 'Query',
       fieldName: 'getGuestbookComment',
-      responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
+      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem()
     });
 
+    let subnetSelection: ec2.SubnetSelection = { subnets: [subnet] };
     const listHandlerLambda = new lambda.Function(this, "ListHandler", {
       runtime: lambda.Runtime.NODEJS_10_X,
       timeout: Duration.seconds(60),
@@ -93,11 +104,9 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
         GSI_NAME: gsiProps.indexName,
         DAX_URL: daxCluster.attrClusterDiscoveryEndpoint
       },
-      initialPolicy: [new PolicyStatement({
-        actions: ['dynamodb:*'],
-        effect: Effect.ALLOW,
-        resources: [commentsTable.tableArn]
-      })]
+      securityGroups: [ec2.SecurityGroup.fromSecurityGroupId(this, "lambda-security-gp-rel", securityGroup.securityGroupId)],
+      vpcSubnets: subnetSelection,
+      role: daxRole
     });
     commentsTable.grantFullAccess(listHandlerLambda);
 
@@ -131,7 +140,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     deleteLambdaDataSource.createResolver({
       typeName: 'Mutation',
       fieldName: 'deleteGuestbookComment',
-      responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
+      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem()
     });
 
     generateInitialData(this, commentsTable);
