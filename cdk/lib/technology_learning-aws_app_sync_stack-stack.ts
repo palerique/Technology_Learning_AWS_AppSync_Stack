@@ -4,7 +4,6 @@ import * as ec2 from '@aws-cdk/aws-ec2';
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as fs from 'fs';
 import * as Path from "path";
-import { Duration } from "@aws-cdk/core";
 
 import { prepareAppSyncIam, prepareDaxIam } from "./prepare_iam";
 import { outputUsefulInfo } from "./output_useful_info";
@@ -92,7 +91,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     let subnetSelection: ec2.SubnetSelection = { subnets: [subnet] };
     const listHandlerLambda = new lambda.Function(this, "ListHandler", {
       runtime: lambda.Runtime.NODEJS_10_X,
-      timeout: Duration.seconds(60),
+      timeout: cdk.Duration.seconds(60),
       code: lambda.Code.fromAsset("../lambdas/lambda/listComments/dist"),
       handler: "index.handler",
       layers: [

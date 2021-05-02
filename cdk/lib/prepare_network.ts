@@ -1,8 +1,7 @@
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as dax from "@aws-cdk/aws-dax";
-import { DefaultInstanceTenancy } from "@aws-cdk/aws-ec2/lib/vpc";
-import cdk = require('@aws-cdk/core');
 import { TechnologyLearningAwsAppSyncStack } from "./technology_learning-aws_app_sync_stack-stack";
+import cdk = require('@aws-cdk/core');
 
 export function prepareNetwork(stack: TechnologyLearningAwsAppSyncStack) {
   //VPC
@@ -17,7 +16,7 @@ export function prepareNetwork(stack: TechnologyLearningAwsAppSyncStack) {
     subnetConfiguration: [isolatedSubnetProps],
     enableDnsHostnames: true,
     enableDnsSupport: true,
-    defaultInstanceTenancy: DefaultInstanceTenancy.DEFAULT
+    defaultInstanceTenancy: ec2.DefaultInstanceTenancy.DEFAULT
   });
 
   // create cfn output vpc id
@@ -56,7 +55,7 @@ export function prepareNetwork(stack: TechnologyLearningAwsAppSyncStack) {
   securityGroup.addIngressRule(ec2.Peer.ipv4('10.200.0.0/24'), ec2.Port.tcp(5439), 'Redshift Ingress1');
   securityGroup.addIngressRule(ec2.Peer.ipv4('10.0.0.0/24'), ec2.Port.tcp(5439), 'Redshift Ingress2');
 
-  let securityGroupIngress = new ec2.CfnSecurityGroupIngress(stack, "", {
+  new ec2.CfnSecurityGroupIngress(stack, "guestbook.sg-ingress", {
     groupId: securityGroup.securityGroupId,
     ipProtocol: "tcp",
     fromPort: 8111,
@@ -68,6 +67,6 @@ export function prepareNetwork(stack: TechnologyLearningAwsAppSyncStack) {
     vpc,
     subnetGroup,
     subnet: vpc.isolatedSubnets[0],
-    securityGroup: ec2.SecurityGroup
+    securityGroup
   };
 }
