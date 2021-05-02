@@ -23,16 +23,13 @@ export function prepareDaxIam(stack: TechnologyLearningAwsAppSyncStack) {
       effect: Effect.ALLOW,
       resources: ['*'],
       actions: [
-        'dax:PutItem',
-        'dax:GetItem',
-        'dynamodb:DescribeTable',
-        'dynamodb:GetItem',
-        'dynamodb:PutItem'
+        'dax:*',
+        'dynamodb:*'
       ]
     })
   );
 
-  daxRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('DAXAccess'));
+  // daxRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('DAXAccess'));
   daxRole.addManagedPolicy(ManagedPolicy.fromManagedPolicyArn(
     stack,
     "dax-policy-by-arn",
