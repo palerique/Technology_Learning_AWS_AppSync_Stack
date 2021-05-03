@@ -105,7 +105,6 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       },
       securityGroups: [ec2.SecurityGroup.fromSecurityGroupId(this, "lambda-security-gp-rel", securityGroup.securityGroupId)],
       vpcSubnets: { subnets: [subnet] },
-      // role: daxRole,
     });
     listHandlerLambda.addToRolePolicy(new PolicyStatement({
       effect: Effect.ALLOW,
