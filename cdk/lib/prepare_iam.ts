@@ -15,7 +15,7 @@ export function prepareAppSyncIam(stack: TechnologyLearningAwsAppSyncStack) {
 
 export function prepareDaxIam(stack: TechnologyLearningAwsAppSyncStack) {
   const daxRole = new Role(stack, 'GuestbookDaxRole', {
-    assumedBy: new ServicePrincipal('dax.amazonaws.com')
+    assumedBy: new ServicePrincipal('dax.amazonaws.com'),
   });
 
   daxRole.addToPolicy(
@@ -29,7 +29,6 @@ export function prepareDaxIam(stack: TechnologyLearningAwsAppSyncStack) {
     })
   );
 
-  // daxRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('DAXAccess'));
   daxRole.addManagedPolicy(ManagedPolicy.fromManagedPolicyArn(
     stack,
     "dax-policy-by-arn",

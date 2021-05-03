@@ -11,7 +11,7 @@ private case object LocalTestEnvironment extends TestEnvironment {
 }
 
 private case object ProductionTestEnvironment extends TestEnvironment {
-  override val host = "https://x6juwzhnubccbiaijltzspr5ji.appsync-api.us-east-1.amazonaws.com"
+  override val host = "https://ydleurle7zak3grqbdpwndveqm.appsync-api.us-east-1.amazonaws.com"
 }
 
 object TestEnvironment {

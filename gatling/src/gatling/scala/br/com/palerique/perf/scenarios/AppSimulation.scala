@@ -10,7 +10,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-final class AppStartup extends Simulation with GuestbookCommentsOperations {
+final class AppSimulation extends Simulation with GuestbookCommentsOperations {
 
   val canonicalModifier: ScenarioBuilder = {
     val graphql =

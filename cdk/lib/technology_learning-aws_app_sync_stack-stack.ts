@@ -12,6 +12,7 @@ import { prepareNetwork } from "./prepare_network";
 import { prepareDax } from "./prepare_dax";
 import { prepareDynamoDb } from "./prepare_dynamo_db";
 import { generateInitialData } from "./generate_initial_data";
+import { Effect, PolicyStatement } from "@aws-cdk/aws-iam";
 
 function getTextFromFile(path: string) {
   return fs.readFileSync(Path.join(__dirname, path), 'utf-8').toString();
@@ -88,7 +89,6 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem()
     });
 
-    let subnetSelection: ec2.SubnetSelection = { subnets: [subnet] };
     const listHandlerLambda = new lambda.Function(this, "ListHandler", {
       runtime: lambda.Runtime.NODEJS_10_X,
       timeout: cdk.Duration.seconds(60),
@@ -104,9 +104,18 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
         DAX_URL: daxCluster.attrClusterDiscoveryEndpoint
       },
       securityGroups: [ec2.SecurityGroup.fromSecurityGroupId(this, "lambda-security-gp-rel", securityGroup.securityGroupId)],
-      vpcSubnets: subnetSelection,
-      role: daxRole
+      vpcSubnets: { subnets: [subnet] },
+      // role: daxRole,
     });
+    listHandlerLambda.addToRolePolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      resources: ['*'],
+      actions: [
+        'dax:*',
+        'dynamodb:*'
+      ]
+    }));
+
     commentsTable.grantFullAccess(listHandlerLambda);
 
     let listLambdaDataSource = commentsGraphQLApi.addLambdaDataSource('listHandlerLambdaDatasource', listHandlerLambda);

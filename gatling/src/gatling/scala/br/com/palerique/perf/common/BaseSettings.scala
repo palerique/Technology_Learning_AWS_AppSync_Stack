@@ -16,7 +16,7 @@ trait BaseSettings {
   final def jsonHttpProtocol(env: TestEnvironment = defaultEnvironment): HttpProtocolBuilder = {
     http.baseUrl(env.baseUrl)
       .disableCaching.userAgentHeader(UserAgent)
-      .header("x-api-key", "da2-ndcfypt3wrgmhm4jywn2lklmr4")
+      .header("x-api-key", "da2-sl3cqqmaqvegplzcvluws3ri2u")
   }
 
   // 10,000 over 1 minute is about the most we can handle locally.
