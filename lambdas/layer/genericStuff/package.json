@@ -12,6 +12,6 @@
     "test": "node_modules/.bin/jest"
   },
   "dependencies": {
-    "aws-sdk": "^2.889.0"
+    "aws-sdk": "2.889.0"
   }
 }

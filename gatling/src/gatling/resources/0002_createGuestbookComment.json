@@ -1,0 +1,1 @@
+{"query":"mutation MyMutation {\n  createGuestbookComment(input: {author: \"Paulo Rodrigues\", guestbookId: \"graduation\", message: \"Great powers come with great responsibilities\"}) {\n    id\n    guestbookId\n    createdDate\n    author\n    message\n  }\n}\n","variables":null,"operationName":"MyMutation"}
