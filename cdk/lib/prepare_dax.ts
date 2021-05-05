@@ -32,8 +32,8 @@ export function prepareDax(
   const daxCluster = new dax.CfnCluster(stack, 'dax-cluster', {
     clusterName: 'table-dax-cluster',
     iamRoleArn: daxRole.roleArn,
-    nodeType: 'dax.t2.small',
-    // nodeType: 'dax.r4.large',
+    // nodeType: 'dax.t2.small',
+    nodeType: 'dax.r4.large',
     replicationFactor: 2,
     subnetGroupName: subnetGroup.ref,
     securityGroupIds: [securityGroup.securityGroupId],

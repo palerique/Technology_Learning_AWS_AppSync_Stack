@@ -1,0 +1,1 @@
+{"query":"query MyQuery {\n  getGuestbookComment(id: \"${comment.id}\") {\n    author\n    createdDate\n    guestbookId\n    id\n    message\n  }\n}\n","variables":null,"operationName":"MyQuery"}

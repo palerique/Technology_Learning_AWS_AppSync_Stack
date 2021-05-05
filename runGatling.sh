@@ -2,8 +2,7 @@
 set -x
 set -e
 
-./build.sh
-
 pushd gatling || exit
-  ./gradlew clean gatlingRun
+#  ./gradlew clean gatlingRun
+   ./gradlew clean gatlingRun-br.com.palerique.guestbook.AllOperationsSimulation
 popd || exit
