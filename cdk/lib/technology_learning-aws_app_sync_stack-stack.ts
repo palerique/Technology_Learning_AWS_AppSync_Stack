@@ -1,6 +1,7 @@
 import cdk = require('@aws-cdk/core');
 import {
   AuthorizationType,
+  CfnApiCache,
   CfnApiKey,
   CfnDataSource,
   CfnResolver,
@@ -18,10 +19,10 @@ import {
   Table,
   TableProps
 } from '@aws-cdk/aws-dynamodb';
-import {ManagedPolicy, Role, ServicePrincipal} from '@aws-cdk/aws-iam';
+import { ManagedPolicy, Role, ServicePrincipal } from '@aws-cdk/aws-iam';
 import * as lambda from "@aws-cdk/aws-lambda";
-import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId} from '@aws-cdk/custom-resources';
-import {datatype, date, helpers} from 'faker';
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from '@aws-cdk/custom-resources';
+import { datatype, date, helpers } from 'faker';
 import * as fs from 'fs';
 import * as Path from "path";
 
@@ -54,17 +55,17 @@ interface Comment {
 
 function generateItem(): Comment {
   return {
-    id: {S: datatype.uuid()},
-    guestbookId: {S: getRandomGuestbookEvent()},
-    createdDate: {S: `${date.past(1).toISOString()}`},
-    author: {S: helpers.createCard().name},
-    message: {S: Quotes.randomQuote().quote}
+    id: { S: datatype.uuid() },
+    guestbookId: { S: getRandomGuestbookEvent() },
+    createdDate: { S: `${date.past(1).toISOString()}` },
+    author: { S: helpers.createCard().name },
+    message: { S: Quotes.randomQuote().quote }
   };
 }
 
 function generateBatch(batchSize = 25): { PutRequest: { Item: Comment } }[] {
   return new Array(batchSize).fill(undefined).map(() => {
-    return {PutRequest: {Item: generateItem()}};
+    return { PutRequest: { Item: generateItem() } };
   });
 }
 
@@ -101,30 +102,6 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AWSXrayFullAccess'));
     guestbookRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('CloudWatchFullAccess'));
 
-    //AppSync API
-    const commentsGraphQLApi = new GraphqlApi(this, 'GuestbookCommentApi', {
-      name: 'guestbook-comment-api',
-      schema: Schema.fromAsset('graphql/schema.graphql'),
-      authorizationConfig: {
-        defaultAuthorization: {
-          authorizationType: AuthorizationType.API_KEY,
-          apiKeyConfig: {
-            expires: cdk.Expiration.after(cdk.Duration.days(365))
-          }
-        },
-      },
-      logConfig: {
-        fieldLogLevel: FieldLogLevel.ALL,
-        excludeVerboseContent: false,
-        role: guestbookRole
-      },
-      xrayEnabled: true
-    });
-
-    new CfnApiKey(this, 'GuestbookCommentApiKey', {
-      apiId: commentsGraphQLApi.apiId
-    });
-
     //DynamoDB Table
     const guestbookIdAttribute: Attribute = {
       name: 'guestbookId',
@@ -159,6 +136,37 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
     };
     commentsTable.addGlobalSecondaryIndex(gsiProps)
 
+    //AppSync API
+    const commentsGraphQLApi = new GraphqlApi(this, 'GuestbookCommentApi', {
+      name: 'guestbook-comment-api',
+      schema: Schema.fromAsset('graphql/schema.graphql'),
+      authorizationConfig: {
+        defaultAuthorization: {
+          authorizationType: AuthorizationType.API_KEY,
+          apiKeyConfig: {
+            expires: cdk.Expiration.after(cdk.Duration.days(365))
+          }
+        },
+      },
+      logConfig: {
+        fieldLogLevel: FieldLogLevel.ALL,
+        excludeVerboseContent: false,
+        role: guestbookRole
+      },
+      xrayEnabled: true
+    });
+
+    new CfnApiKey(this, 'GuestbookCommentApiKey', {
+      apiId: commentsGraphQLApi.apiId
+    });
+
+    //TODO const apiCache: CfnApiCache = new CfnApiCache(scope, 'GuestbookApiCache', {
+    //   apiId: commentsGraphQLApi.apiId,
+    //   apiCachingBehavior: "PER_RESOLVER_CACHING",
+    //   ttl: 3600,
+    //   type: "SMALL",
+    // });
+
     //Datasource resolvers:
     const dataSource = new CfnDataSource(this, 'GuestbookCommentDataSource', {
       apiId: commentsGraphQLApi.apiId,
@@ -177,7 +185,10 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
       fieldName: 'createGuestbookComment',
       dataSourceName: dataSource.name,
       requestMappingTemplate: getTextFromFile('resolvers/createGuestbookComment.vm'),
-      responseMappingTemplate: responseMappingTemplate
+      responseMappingTemplate: responseMappingTemplate,
+      //TODO: cachingConfig: {
+      //   cachingKeys: [apiCache.]
+      // }
     });
     saveResolver.addDependsOn(dataSource);
 
@@ -272,7 +283,7 @@ export class TechnologyLearningAwsAppSyncStack extends cdk.Stack {
           },
           physicalResourceId: PhysicalResourceId.of(`initDBDataBatch${i}`),
         },
-        policy: AwsCustomResourcePolicy.fromSdkCalls({resources: [commentsTable.tableArn]}),
+        policy: AwsCustomResourcePolicy.fromSdkCalls({ resources: [commentsTable.tableArn] }),
       });
     }
   }

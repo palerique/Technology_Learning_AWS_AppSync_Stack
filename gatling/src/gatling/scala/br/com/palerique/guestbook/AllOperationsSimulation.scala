@@ -11,7 +11,7 @@ import scala.language.postfixOps
 class AllOperationsSimulation extends Simulation {
 
   val httpProtocol: HttpProtocolBuilder = http
-    .baseUrl("https://lbexwsny4vevrf37szamtlzjh4.appsync-api.us-east-1.amazonaws.com")
+    .baseUrl("https://3pttdbbpyvcaric564o6x5wz2a.appsync-api.us-east-1.amazonaws.com")
     .inferHtmlResources(BlackList(
       """.*\.js""",
       """.*\.css""",
@@ -31,7 +31,7 @@ class AllOperationsSimulation extends Simulation {
     .contentTypeHeader("application/json")
     .userAgentHeader("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36")
 
-  val headers = Map("x-api-key" -> "da2-behai2leqfaprbdzcgjadije7m")
+  val headers = Map("x-api-key" -> "da2-5yg2idbtknczpay3v2xikeljbu")
 
   val graphQl = "/graphql"
 
@@ -135,6 +135,8 @@ class AllOperationsSimulation extends Simulation {
       rampConcurrentUsers(100).to(200).during(20.seconds),
       rampConcurrentUsers(200).to(300).during(20.seconds),
       rampConcurrentUsers(300).to(500).during(20.seconds),
+      //      rampConcurrentUsers(500).to(1000).during(40.seconds), // too much
+      //      rampConcurrentUsers(1000).to(2000).during(40.seconds), // too much
     ),
   ).protocols(httpProtocol)
 }
