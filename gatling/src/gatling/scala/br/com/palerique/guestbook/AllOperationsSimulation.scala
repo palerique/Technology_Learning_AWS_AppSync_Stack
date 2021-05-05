@@ -5,6 +5,8 @@ import io.gatling.core.structure.{ChainBuilder, ScenarioBuilder}
 import io.gatling.http.Predef._
 import io.gatling.http.protocol.HttpProtocolBuilder
 
+import scala.concurrent.duration.DurationInt
+
 class AllOperationsSimulation extends Simulation {
 
   val httpProtocol: HttpProtocolBuilder = http
@@ -105,5 +107,9 @@ class AllOperationsSimulation extends Simulation {
     ).pause(2)
   }
 
-  setUp(scn.inject(atOnceUsers(1))).protocols(httpProtocol)
+  setUp(
+    //    scn.inject(atOnceUsers(1))
+        scn.inject(atOnceUsers(100))
+//    scn.inject(rampUsers(2000).during(60.seconds))
+  ).protocols(httpProtocol)
 }
