@@ -36,7 +36,7 @@ class AllOperationsSimulation extends Simulation {
     .exec(ListGuestbookComments.listGuestbookComments)
     .exec(GetGuestbookComment.getGuestbookComment)
     .exec(CreateGuestbookComment.createGuestbookComment)
-    .exec(GetGuestbookComment.getCreatedGuestbookComment)
+    .exec(GetGuestbookComment.getGuestbookComment)
     .exec(DeleteGuestbookComment.deleteGuestbookComment)
     .exec(GetGuestbookComment.getDeletedGuestbookComment)
 
@@ -44,43 +44,65 @@ class AllOperationsSimulation extends Simulation {
     val listGuestbookComments: ChainBuilder = exec(http("listGuestbookComments")
       .post(graphQl)
       .headers(headers)
-      .body(RawFileBody("0000_listGuestbookComments.json")))
-      .pause(2)
+      .body(ElFileBody("0000_listGuestbookComments.json")).asJson
+      .check(status.is(200))
+      .check(jsonPath("$.data.listGuestbookComments.items[0]").notNull)
+      .check(jsonPath("$.data.listGuestbookComments.items[0]").ofType[Map[String, Any]].find.saveAs("comment"))
+    ).pause(2)
   }
 
   object GetGuestbookComment {
     val getGuestbookComment: ChainBuilder = exec(http("getGuestbookComment")
       .post(graphQl)
       .headers(headers)
-      .body(RawFileBody("0001_getGuestbookComment.json")))
-      .pause(2)
-
-    val getCreatedGuestbookComment: ChainBuilder = exec(http("getGuestbookComment_created")
-      .post(graphQl)
-      .headers(headers)
-      .body(RawFileBody("0003_getGuestbookComment_created.json")))
-      .pause(2)
+      .body(ElFileBody("0001_getGuestbookComment.json")).asJson
+      .check(status.is(200))
+      .check(jsonPath("$.data.getGuestbookComment").notNull)
+      .check(jsonPath("$.data.getGuestbookComment.id").is("${comment.id}"))
+      .check(jsonPath("$.data.getGuestbookComment.author").is("${comment.author}"))
+      .check(jsonPath("$.data.getGuestbookComment.createdDate").is("${comment.createdDate}"))
+      .check(jsonPath("$.data.getGuestbookComment.message").is("${comment.message}"))
+      .check(jsonPath("$.data.getGuestbookComment.guestbookId").is("${comment.guestbookId}"))
+    ).pause(2)
 
     val getDeletedGuestbookComment: ChainBuilder = exec(http("getGuestbookComment_deleted")
       .post(graphQl)
       .headers(headers)
-      .body(RawFileBody("0005_getGuestbookComment_deleted.json")))
+      .body(ElFileBody("0001_getGuestbookComment.json")).asJson
+      .check(status.is(200))
+      .check(jsonPath("$.data.getGuestbookComment").isNull)
+    )
   }
 
   object CreateGuestbookComment {
     val createGuestbookComment: ChainBuilder = exec(http("createGuestbookComment")
       .post(graphQl)
       .headers(headers)
-      .body(RawFileBody("0002_createGuestbookComment.json")))
-      .pause(2)
+      .body(ElFileBody("0002_createGuestbookComment.json")).asJson
+      .check(status.is(200))
+      .check(jsonPath("$.data.createGuestbookComment").notNull)
+      .check(jsonPath("$.data.createGuestbookComment.id").notNull)
+      .check(jsonPath("$.data.createGuestbookComment.author").is("Paulo Rodrigues"))
+      .check(jsonPath("$.data.createGuestbookComment.createdDate").notNull)
+      .check(jsonPath("$.data.createGuestbookComment.message").is("Great powers come with great responsibilities"))
+      .check(jsonPath("$.data.createGuestbookComment.guestbookId").is("graduation"))
+      .check(jsonPath("$.data.createGuestbookComment").ofType[Map[String, Any]].find.saveAs("comment"))
+    ).pause(2)
   }
 
   object DeleteGuestbookComment {
     val deleteGuestbookComment: ChainBuilder = exec(http("deleteGuestbookComment_created")
       .post(graphQl)
       .headers(headers)
-      .body(RawFileBody("0004_deleteGuestbookComment_created.json")))
-      .pause(2)
+      .body(ElFileBody("0003_deleteGuestbookComment_created.json")).asJson
+      .check(status.is(200))
+      .check(jsonPath("$.data.deleteGuestbookComment").notNull)
+      .check(jsonPath("$.data.deleteGuestbookComment.id").notNull)
+      .check(jsonPath("$.data.deleteGuestbookComment.author").is("Paulo Rodrigues"))
+      .check(jsonPath("$.data.deleteGuestbookComment.createdDate").notNull)
+      .check(jsonPath("$.data.deleteGuestbookComment.message").is("Great powers come with great responsibilities"))
+      .check(jsonPath("$.data.deleteGuestbookComment.guestbookId").is("graduation"))
+    ).pause(2)
   }
 
   setUp(scn.inject(atOnceUsers(1))).protocols(httpProtocol)

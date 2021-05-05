@@ -1,1 +1,0 @@
-{"query":"mutation MyMutation {\n  deleteGuestbookComment(input: {id: \"c6ab6752-90b8-44de-a96c-1475ef0913e7\"}) {\n    author\n    createdDate\n    guestbookId\n    id\n    message\n  }\n}\n","variables":null,"operationName":"MyMutation"}
